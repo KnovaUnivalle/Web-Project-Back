@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "web-project-back"
+version = "0.1.0"
+description = ""
+authors = ["Knova <https://github.com/KnovaUnivalle>"]
+license = "MIT license"
+readme = "README.md"
+packages = [{include = "web_project_back"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+django = "^4.2"
+
+
+[tool.poetry.group.dev.dependencies]
+autopep8 = "^2.0.2"
+flake8 = "^6.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
