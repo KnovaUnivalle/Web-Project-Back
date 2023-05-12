@@ -36,13 +36,13 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'besto',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'besto'
 ]
 
 MIDDLEWARE = [
@@ -81,12 +81,12 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 DATABASES = {
     'default': {
-       'ENGINE': 'django.db.backends.postgresql_psycopg2',
-       'NAME': env('db'),
-       'USER': env('user'),
-       'PASSWORD': env('password'),
-       'HOST': env('host'),
-       'PORT': env('port'),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': env('db'),
+        'USER': env('user'),
+        'PASSWORD': env('password'),
+        'HOST': env('host'),
+        'PORT': env('port'),
     }
 }
 
