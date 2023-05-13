@@ -1,6 +1,8 @@
 from django.db import models
 
 # Create your models here.
+
+
 class admin(models.Model):
     id = models.BigAutoField(primary_key=True)
     email = models.CharField(max_length=50)
@@ -9,13 +11,15 @@ class admin(models.Model):
     def __str__(self):
         return self.email
 
+
 class rol(models.Model):
     id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=50)
 
     def __str__(self):
         return self.name
-        
+
+
 class user(models.Model):
     id = models.BigAutoField(primary_key=True)
     id_rol = models.ForeignKey(rol, on_delete=models.CASCADE)
@@ -27,15 +31,17 @@ class user(models.Model):
 
     def __str__(self):
         return self.name
-    
+
+
 class product(models.Model):
     id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=50)
     description = models.CharField(max_length=50)
     price = models.FloatField()
-    
+
     def __str__(self):
         return self.name
+
 
 class store(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -44,7 +50,8 @@ class store(models.Model):
 
     def __str__(self):
         return self.name
-    
+
+
 class searchHistory(models.Model):
     id = models.BigAutoField(primary_key=True)
     id_user = models.ForeignKey(user, on_delete=models.CASCADE)
@@ -54,7 +61,8 @@ class searchHistory(models.Model):
 
     def __str__(self):
         return self.id_user
-    
+
+
 class suggestion(models.Model):
     id = models.BigAutoField(primary_key=True)
     id_product = models.ForeignKey(product, on_delete=models.CASCADE)

@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class BestoConfig(AppConfig):
+class CoreConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'besto'
+    name = 'core'
