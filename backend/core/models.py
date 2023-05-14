@@ -3,16 +3,16 @@ from django.db import models
 # Create your models here.
 
 
-class admin(models.Model):
+class Admin(models.Model):
     id = models.BigAutoField(primary_key=True)
-    email = models.CharField(max_length=50)
-    password = models.CharField(max_length=50)
+    email = models.EmailField(max_length=50)
+    password = models.CharField(max_length=100)
 
     def __str__(self):
         return self.email
 
 
-class rol(models.Model):
+class Rol(models.Model):
     id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=50)
 
@@ -20,21 +20,20 @@ class rol(models.Model):
         return self.name
 
 
-class user(models.Model):
+class User(models.Model):
     id = models.BigAutoField(primary_key=True)
-    id_rol = models.ForeignKey(rol, on_delete=models.CASCADE)
+    rol = models.ForeignKey(Rol, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
-    email = models.CharField(max_length=50)
-    password = models.CharField(max_length=50)
+    email = models.EmailField(max_length=50)
+    password = models.CharField(max_length=100)
     birth_date = models.DateField()
 
     def __str__(self):
         return self.name
 
 
-class product(models.Model):
-    id = models.BigAutoField(primary_key=True)
+class Product(models.Model):
     name = models.CharField(max_length=50)
     description = models.CharField(max_length=50)
     price = models.FloatField()
@@ -43,7 +42,7 @@ class product(models.Model):
         return self.name
 
 
-class store(models.Model):
+class Store(models.Model):
     id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=50)
     address = models.CharField(max_length=50)
@@ -52,22 +51,22 @@ class store(models.Model):
         return self.name
 
 
-class searchHistory(models.Model):
+class SearchHistory(models.Model):
     id = models.BigAutoField(primary_key=True)
-    id_user = models.ForeignKey(user, on_delete=models.CASCADE)
-    id_product = models.ForeignKey(product, on_delete=models.CASCADE)
-    id_store = models.ForeignKey(store, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    store = models.ForeignKey(Store, on_delete=models.CASCADE)
     date = models.DateField()
 
     def __str__(self):
-        return self.id_user
+        return self.user
 
 
-class suggestion(models.Model):
+class Suggestion(models.Model):
     id = models.BigAutoField(primary_key=True)
-    id_product = models.ForeignKey(product, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     product_option = models.JSONField()
     store_option = models.JSONField()
 
     def __str__(self):
-        return self.id_user
+        return self.product
