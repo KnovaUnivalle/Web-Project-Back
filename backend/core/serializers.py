@@ -37,7 +37,6 @@ class SearchHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = searchHistory
         fields = ('id', 'id_user', 'id_product', 'id_store', 'date')
-        read_only_fields = ('date', )
 
 
 class SuggestionSerializer(serializers.ModelSerializer):
