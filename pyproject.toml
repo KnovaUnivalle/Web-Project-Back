@@ -11,6 +11,8 @@ packages = [{include = "web_project_back"}]
 python = "^3.10"
 django = "^4.2"
 psycopg2 = "^2.9.6"
+djangorestframework = "^3.14.0"
+django-cors-headers = "^4.0.0"
 
 
 [tool.poetry.group.dev.dependencies]
