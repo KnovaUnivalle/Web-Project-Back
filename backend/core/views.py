@@ -1,12 +1,13 @@
 from .validations import verify_password
 from rest_framework import status
 from rest_framework.decorators import api_view
-from rest_framework.response import Response
+from django.http import JsonResponse
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
 from .models import Admin, User
 from .serializers import AdminSerializer, UserSerializer
 from .validations import encrypt_password
+from .permission import IsCustomer, IsManager
 
 
 @api_view(["POST"])
@@ -16,8 +17,8 @@ def registerUser(request):
         user = serializer.save()
         user.password = encrypt_password(user.password)
         user.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+    return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(["POST"])
@@ -27,8 +28,8 @@ def registerAdmin(request):
         admin = serializer.save()
         admin.password = encrypt_password(admin.password)
         admin.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+    return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
@@ -38,23 +39,25 @@ def login(request):
 
     try:
         user = User.objects.get(email=email)
-        # user_type = User.objects.get()
+        rol_id = user.rol_id
     except User.DoesNotExist:
         try:
             user = Admin.objects.get(email=email)
-            # user_type = 'admin'
         except Admin.DoesNotExist:
-            return Response({'error': 'Invalid credentials.'}, status=status.HTTP_401_UNAUTHORIZED)
+            return JsonResponse({'error': 'Invalid credentials.'}, status=status.HTTP_401_UNAUTHORIZED)
 
     if verify_password(password, user.password):
         refresh = RefreshToken.for_user(user)
+        refresh['rol_id'] = rol_id
         data = {
             'refresh': str(refresh),
             'token': str(refresh.access_token),
         }
-        return Response(data, status=status.HTTP_200_OK)
+        response = JsonResponse(data, status=status.HTTP_200_OK)
+        response.set_cookie('token', data['token'], httponly=True)
+        return response
     else:
-        return Response({'error': 'Invalid credentials.'}, status=status.HTTP_401_UNAUTHORIZED)
+        return JsonResponse({'error': 'Invalid credentials.'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 @api_view(['POST'])
@@ -63,6 +66,18 @@ def logout(request):
         token = request.headers['Authorization'].split()[1]
         print(type(token))
         print(token)
-        return Response({'message': 'Logout exitoso'}, status=status.HTTP_200_OK)
+        return JsonResponse({'message': 'Logout exitoso'}, status=status.HTTP_200_OK)
     except Exception as e:
-        return Response({'detail': str(e), 'code': 'logout_error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return JsonResponse({'detail': str(e), 'code': 'logout_error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsCustomer])
+def test_Authorization_cutomer(request):
+    return JsonResponse({'message': 'Eres un customer, tienes accesso '}, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsManager])
+def test_Authorization_manager(request):
+    return JsonResponse({'message': 'Eres un manager, tienes acceso'}, status=status.HTTP_200_OK)

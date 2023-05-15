@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-3bdiy_p(syzu=ke(n$6l-_pv1=#frzm8l4&#40qn7506^#t#op'
+SECRET_KEY = env('SECRETE_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -45,7 +45,9 @@ CORS_ALLOWED_ORIGINS = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
+    ),
+    'COOKIES_SAMESITE': 'None',
+    'COOKIES_SECURE': True,
 }
 
 SIMPLE_JWT = {
@@ -54,7 +56,8 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': False,
-    'ALGORITHM': 'HS256'
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY
 }
 
 # Application definition
