@@ -12,11 +12,11 @@ urlpatterns = [
     path('manager/', test_Authorization_manager, name='customer'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     # Creates the urls for POST, DELETE, PUT and GET
-    path('api/admin', AdminViewSet, name='admin'),
-    path('api/role', RoleViewSet, name='role'),
-    path('api/user', UserViewSet, name='user'),
-    path('api/product', ProductViewSet, name='product'),
-    path('api/store', StoreViewSet, name='store'),
-    path('api/searchHistory', SearchHistoryViewSet, name='searchHistory'),
-    path('api/suggestion', SuggestionViewSet, name='suggestion')
+    path('admin/', AdminViewSet.as_view, name='admin'),
+    path('role/', RoleViewSet.as_view, name='role'),
+    path('user/', UserViewSet.as_view, name='user'),
+    path('product/', ProductViewSet.as_view, name='product'),
+    path('store/', StoreViewSet.as_view, name='store'),
+    path('searchHistory/', SearchHistoryViewSet.as_view, name='searchHistory'),
+    path('suggestion/', SuggestionViewSet.as_view, name='suggestion')
 ]

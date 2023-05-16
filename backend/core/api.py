@@ -1,46 +1,46 @@
 from rest_framework import viewsets, permissions
-from .serializers import AdminSerializer, RoleSerializer, UserSerializer, ProductSerializer, StoreSerializer, SearchHistorySerializer, SuggestionSerializer
-from .models import admin, rol, user, product, store, searchHistory, suggestion
+from .serializers import AdminSerializer, RolSerializer, UserSerializer, ProductSerializer, StoreSerializer, SearchHistorySerializer, SuggestionSerializer
+from .models import Admin, Rol, User, Product, Store, SearchHistory, Suggestion
 
 
 # Indicates which queries could be made
 class AdminViewSet(viewsets.ModelViewSet):
-    queryset = admin.objects.all()
+    queryset = Admin.objects.all()
     permission_classes = [permissions.AllowAny]
     serializer_class = AdminSerializer
 
 
 class RoleViewSet(viewsets.ModelViewSet):
-    queryset = rol.objects.all()
+    queryset = Rol.objects.all()
     permission_classes = [permissions.AllowAny]
-    serializer_class = RoleSerializer
+    serializer_class = RolSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = user.objects.all()
+    queryset = User.objects.all()
     permission_classes = [permissions.AllowAny]
     serializer_class = UserSerializer
 
 
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = product.objects.all()
+    queryset = Product.objects.all()
     permission_classes = [permissions.AllowAny]
     serializer_class = ProductSerializer
 
 
 class StoreViewSet(viewsets.ModelViewSet):
-    queryset = store.objects.all()
+    queryset = Store.objects.all()
     permission_classes = [permissions.AllowAny]
     serializer_class = StoreSerializer
 
 
 class SearchHistoryViewSet(viewsets.ModelViewSet):
-    queryset = searchHistory.objects.all()
+    queryset = SearchHistory.objects.all()
     permission_classes = [permissions.AllowAny]
     serializer_class = SearchHistorySerializer
 
 
 class SuggestionViewSet(viewsets.ModelViewSet):
-    queryset = suggestion.objects.all()
+    queryset = Suggestion.objects.all()
     permission_classes = [permissions.AllowAny]
     serializer_class = SuggestionSerializer
