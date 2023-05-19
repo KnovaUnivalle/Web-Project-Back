@@ -5,7 +5,7 @@ from django.db import models
 
 class Admin(models.Model):
     id = models.BigAutoField(primary_key=True)
-    email = models.EmailField(max_length=50)
+    email = models.EmailField(unique=True, max_length=50)
     password = models.CharField(max_length=100)
 
     def __str__(self):
@@ -25,7 +25,7 @@ class User(models.Model):
     rol = models.ForeignKey(Rol, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
-    email = models.EmailField(max_length=50)
+    email = models.EmailField(unique=True, max_length=50)
     password = models.CharField(max_length=100)
     birth_date = models.DateField()
 
