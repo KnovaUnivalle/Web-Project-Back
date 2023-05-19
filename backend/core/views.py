@@ -2,12 +2,10 @@ from rest_framework import status, generics, permissions, status, serializers
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenObtainPairView
 from django.http import JsonResponse
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
 from django.contrib.auth import get_user_model
-from django.contrib.auth.tokens import default_token_generator
 from django.utils.translation import gettext_lazy as _
 from .validations import verify_password
 from .models import Admin, User
@@ -49,6 +47,7 @@ def login(request):
     except User.DoesNotExist:
         try:
             user = Admin.objects.get(email=email)
+            rol_id = 0
         except Admin.DoesNotExist:
             return JsonResponse({'error': 'Invalid credentials.'}, status=status.HTTP_401_UNAUTHORIZED)
 

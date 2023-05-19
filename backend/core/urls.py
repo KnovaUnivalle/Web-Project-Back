@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework import routers
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import registerAdmin, registerUser, login, logout, test_Authorization_cutomer, test_Authorization_manager, test_user
+from .views import registerAdmin, registerUser, login, logout, test_Authorization_cutomer, test_Authorization_manager
 from .api import AdminViewSet, RoleViewSet, UserViewSet, ProductViewSet, StoreViewSet, SearchHistoryViewSet, SuggestionViewSet
 
 urlpatterns = [
