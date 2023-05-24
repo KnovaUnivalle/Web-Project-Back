@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework import routers
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import registerAdmin, registerUser, login, logout, test_Authorization_cutomer, test_Authorization_manager
+from .views import registerAdmin, registerUser, login, logout, CustomerView, MyProtectedView, ManagerView, AdminView
 from .api import AdminViewSet, RoleViewSet, UserViewSet, ProductViewSet, StoreViewSet, SearchHistoryViewSet, SuggestionViewSet
 
 urlpatterns = [
@@ -9,9 +9,11 @@ urlpatterns = [
     path('user/register/', registerUser, name='resgisterUser'),
     path('login/', login, name='login'),
     path('logout/', logout, name='logout'),
-    path('customer/', test_Authorization_cutomer, name='customer'),
-    path('manager/', test_Authorization_manager, name='customer'),
+    path('customer/', CustomerView.as_view(), name='customer'),
+    path('manager/', ManagerView.as_view(), name='manager'),
+    path('administrator/', AdminView.as_view(), name='administrator'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('protect/', MyProtectedView.as_view(), name='protect'),
     # Creates the urls for POST, DELETE, PUT and GET
     path('admin/', AdminViewSet.as_view({'get': 'list'}), name='admin'),
     path('role/', RoleViewSet.as_view({'get': 'list'}), name='role'),
