@@ -1,15 +1,17 @@
 from django.db import models
+from django.contrib.auth.base_user import BaseUserManager
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 
-# Create your models here.
-
-
-class Admin(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    email = models.EmailField(max_length=50)
-    password = models.CharField(max_length=100)
-
-    def __str__(self):
-        return self.email
+class UserManager(BaseUserManager):
+	def create_user(self, email, password=None):
+		if not email:
+			raise ValueError('An email is required.')
+		if not password:
+			raise ValueError('A password is required.')
+		email = self.normalize_email(email)
+		user = self.model(email=email)
+		user.set_password(password)
+		user.save()
 
 
 class Rol(models.Model):
@@ -20,18 +22,28 @@ class Rol(models.Model):
         return self.name
 
 
-class User(models.Model):
+class Admin(models.Model):
     id = models.BigAutoField(primary_key=True)
-    rol = models.ForeignKey(Rol, on_delete=models.CASCADE)
-    name = models.CharField(max_length=50)
-    last_name = models.CharField(max_length=50)
-    email = models.EmailField(max_length=50)
+    email = models.EmailField(unique=True, max_length=50)
     password = models.CharField(max_length=100)
-    birth_date = models.DateField()
 
     def __str__(self):
-        return self.name
+        return self.email
 
+class User(AbstractBaseUser, PermissionsMixin):
+	id = models.AutoField(primary_key=True)
+	rol = models.ForeignKey(Rol, on_delete=models.CASCADE, null=True)
+	name = models.CharField(max_length=50)
+	last_name = models.CharField(max_length=50)
+	email = models.EmailField(max_length=50, unique=True)
+	birth_date = models.DateField(null=True)
+	USERNAME_FIELD = 'email'
+	REQUIRED_FIELDS = ['rol', 'name', 'last_name', 'birth_date']
+	objects = UserManager()
+        
+	def __str__(self):
+		return self.name
+	
 
 class Product(models.Model):
     name = models.CharField(max_length=50)
