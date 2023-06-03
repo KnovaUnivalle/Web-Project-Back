@@ -1,8 +1,7 @@
 from django.urls import path
-from rest_framework import routers
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import registerAdmin, registerUser, login, logout, CustomerView, MyProtectedView, ManagerView, AdminView
-from .api import AdminViewSet, RoleViewSet, UserViewSet, ProductViewSet, StoreViewSet, SearchHistoryViewSet, SuggestionViewSet
+from .views import *
+from .api import *
 
 urlpatterns = [
     path('admin/register/', registerAdmin, name='registerAdmin'),
@@ -13,7 +12,7 @@ urlpatterns = [
     path('manager/', ManagerView.as_view(), name='manager'),
     path('administrator/', AdminView.as_view(), name='administrator'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('protect/', MyProtectedView.as_view(), name='protect'),
+    path('google/', GoogleSocialAuthView.as_view()),
     # Creates the urls for POST, DELETE, PUT and GET
     path('admin/', AdminViewSet.as_view({'get': 'list'}), name='admin'),
     path('role/', RoleViewSet.as_view({'get': 'list'}), name='role'),

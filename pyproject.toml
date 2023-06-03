@@ -16,6 +16,8 @@ django-cors-headers = "^4.0.0"
 djangorestframework-simplejwt = "^5.2.2"
 asgiref = "^3.6.0"
 django-allauth = "^0.54.0"
+firebase-admin = "^6.1.0"
+google-api-python-client = "^2.88.0"
 
 
 [tool.poetry.group.dev.dependencies]

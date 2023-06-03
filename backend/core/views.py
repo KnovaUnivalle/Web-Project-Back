@@ -1,17 +1,15 @@
 from rest_framework import status, generics, permissions, status, serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.http import JsonResponse
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
-from .validations import verify_password
+from .validations import *
 from .models import Admin, User
-from .serializers import AdminSerializer, UserSerializer
-from .validations import encrypt_password
+from .serializers import *
 from .permission import IsCustomer, IsManager, IsAdmin
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
-from .validations import decode_token
 
 
 @api_view(["POST"])
@@ -143,3 +141,18 @@ class GoogleLogin(generics.GenericAPIView):
             'refresh': str(refresh),
             'access': str(refresh.access_token),
         })
+
+@permission_classes((AllowAny, ))
+class GoogleSocialAuthView(generics.GenericAPIView):
+
+    serializer_class = GoogleSocialAuthSerializer
+
+    def post(self, request):
+        """
+        POST with "auth_token"
+        Send an idtoken as from google to get user information
+        """
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = ((serializer.validated_data)['auth_token'])
+        return JsonResponse(data, status=status.HTTP_200_OK)
