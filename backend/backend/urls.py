@@ -8,4 +8,5 @@ urlpatterns = [
     path('api/', include('core.urls')),
     path('accounts/', include('allauth.urls')),
     path('api-auth/google/', GoogleLogin.as_view(), name='google_login'),
+    path('scraping/', include('scraping.urls')),
 ]
