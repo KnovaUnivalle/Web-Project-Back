@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
+from .utils import *
 from .validations import *
 from .models import Admin, User
 from .serializers import *
@@ -11,9 +12,12 @@ from .permission import IsCustomer, IsManager, IsAdmin
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 
-
+@permission_classes((AllowAny, ))
 class RegisterUser(generics.CreateAPIView):
     def post(self, request):
+        print('=====================================')
+        print(request.data)
+        print(type(request.data))
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
@@ -49,16 +53,10 @@ def login(request):
             return JsonResponse({'error': 'Invalid credentials.'}, status=status.HTTP_401_UNAUTHORIZED)
 
     if verify_password(password, user.password):
-        refresh = RefreshToken.for_user(user)
-        refresh['rol_id'] = rol_id
-        data = {
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-            'rol_id': rol_id
-        }
-
+        data = generateToke(user, rol_id)
+    
         response = JsonResponse(data, status=status.HTTP_200_OK)
-        response.set_cookie('refresh_token', str(refresh), httponly=True)
+        response.set_cookie('refresh_token', data['refresh'], httponly=True)
         return response
     else:
         return JsonResponse({'error': 'Invalid credentials.'}, status=status.HTTP_401_UNAUTHORIZED)
@@ -135,7 +133,7 @@ class GoogleLogin(generics.GenericAPIView):
             user = User.objects.get(email=email)
         except User.DoesNotExist:
             user = User.objects.create(email=email)
-
+            
         refresh = RefreshToken.for_user(user)
 
         return JsonResponse({
@@ -157,25 +155,21 @@ class GoogleSocialAuthView(generics.GenericAPIView):
         tempUser = User.objects.filter(email=data['email'])
         user = {
             'email': data['email'],
+            'password': settings.SOCIAL_SECRET_KEY,
             'name': data['given_name'],
             'last_name': data['family_name'],
-            'password': settings.SOCIAL_SECRET_KEY,
-            'rol_id': 1,
-            "birth_date": "1990-01-01"
+            'birth_date': "1990-01-01",
+            'rol': 1
         }
+        print(user)
+        print(type(user))
         
         if tempUser.exists():
                 tempUser = User.objects.get(email=user['email'])
-                refresh = RefreshToken.for_user(tempUser)
-                refresh['rol_id'] = tempUser.rol_id 
-                data = {
-                    'refresh': str(refresh),
-                    'access': str(refresh.access_token),
-                    'rol_id': tempUser.rol_id
-                }
+                data = generateToke(tempUser, user['rol_id'])
                 print(data)
                 response = JsonResponse(data, status=status.HTTP_200_OK)
-                response.set_cookie('refresh_token', str(refresh), httponly=True)
+                response.set_cookie('refresh_token', data['refresh'], httponly=True)
                 return response
         else:
             ## Register user
@@ -188,13 +182,9 @@ class GoogleSocialAuthView(generics.GenericAPIView):
                 return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
             # Login
-            refresh = RefreshToken.for_user(user)
-            refresh['rol_id'] = user.rol_id
-            data = {
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-                'rol_id': user.rol_id
-            }
+            tempUser = User.objects.get(email=data['email'])
+            data = generateToke(tempUser, tempUser.rol_id)
+            print(data)
             response = JsonResponse(data, status=status.HTTP_200_OK)
-            response.set_cookie('refresh_token', str(refresh), httponly=True)
-            return response
+            response.set_cookie('refresh_token', data['refresh'], httponly=True)
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
