@@ -12,15 +12,15 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 
 
-@api_view(["POST"])
-def registerUser(request):
-    serializer = UserSerializer(data=request.data)
-    if serializer.is_valid():
-        user = serializer.save()
-        user.password = encrypt_password(user.password)
-        user.save()
-        return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
-    return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class RegisterUser(generics.CreateAPIView):
+    def post(self, request):
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            user.password = encrypt_password(user.password)
+            user.save()
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(["POST"])
@@ -56,6 +56,7 @@ def login(request):
             'access': str(refresh.access_token),
             'rol_id': rol_id
         }
+
         response = JsonResponse(data, status=status.HTTP_200_OK)
         response.set_cookie('refresh_token', str(refresh), httponly=True)
         return response
@@ -148,11 +149,52 @@ class GoogleSocialAuthView(generics.GenericAPIView):
     serializer_class = GoogleSocialAuthSerializer
 
     def post(self, request):
-        """
-        POST with "auth_token"
-        Send an idtoken as from google to get user information
-        """
         serializer = self.serializer_class(data=request.data)
+        
         serializer.is_valid(raise_exception=True)
         data = ((serializer.validated_data)['auth_token'])
-        return JsonResponse(data, status=status.HTTP_200_OK)
+    
+        tempUser = User.objects.filter(email=data['email'])
+        user = {
+            'email': data['email'],
+            'name': data['given_name'],
+            'last_name': data['family_name'],
+            'password': settings.SOCIAL_SECRET_KEY,
+            'rol_id': 1,
+            "birth_date": "1990-01-01"
+        }
+        
+        if tempUser.exists():
+                tempUser = User.objects.get(email=user['email'])
+                refresh = RefreshToken.for_user(tempUser)
+                refresh['rol_id'] = tempUser.rol_id 
+                data = {
+                    'refresh': str(refresh),
+                    'access': str(refresh.access_token),
+                    'rol_id': tempUser.rol_id
+                }
+                print(data)
+                response = JsonResponse(data, status=status.HTTP_200_OK)
+                response.set_cookie('refresh_token', str(refresh), httponly=True)
+                return response
+        else:
+            ## Register user
+            serializer = UserSerializer(data=user)
+            if serializer.is_valid():
+                user = serializer.save()
+                user.password = encrypt_password(user.password)
+                user.save()
+            else:
+                return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+            # Login
+            refresh = RefreshToken.for_user(user)
+            refresh['rol_id'] = user.rol_id
+            data = {
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'rol_id': user.rol_id
+            }
+            response = JsonResponse(data, status=status.HTTP_200_OK)
+            response.set_cookie('refresh_token', str(refresh), httponly=True)
+            return response

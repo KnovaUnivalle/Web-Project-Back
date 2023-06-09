@@ -3,9 +3,8 @@ from .models import Admin, Rol, User, Product, Store, SearchHistory, Suggestion
 from django.contrib.auth import get_user_model, authenticate
 from django.conf import settings
 from library.sociallib import google
-from library.register.register import register_social_user
 from rest_framework.exceptions import AuthenticationFailed
-
+import json
 
 UserModel = get_user_model()
 
@@ -98,15 +97,7 @@ class GoogleSocialAuthSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 'The token is invalid or expired. Please login again.'
             )
-        print(user_data['aud'])
         if user_data['aud'] != settings.GOOGLE_CLIENT_ID:
-
             raise AuthenticationFailed('oops, who are you?')
-
-        user_id = user_data['sub']
-        email = user_data['email']
-        name = user_data['name']
-        provider = 'google'
-
-        return register_social_user(
-            provider=provider, user_id=user_id, email=email, name=name)
+            
+        return user_data
