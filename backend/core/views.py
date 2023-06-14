@@ -15,9 +15,6 @@ from rest_framework.views import APIView
 @permission_classes((AllowAny, ))
 class RegisterUser(generics.CreateAPIView):
     def post(self, request):
-        print('=====================================')
-        print(request.data)
-        print(type(request.data))
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
@@ -155,19 +152,16 @@ class GoogleSocialAuthView(generics.GenericAPIView):
         tempUser = User.objects.filter(email=data['email'])
         user = {
             'email': data['email'],
-            'password': settings.SOCIAL_SECRET_KEY,
+            'password': generate_random_password(),
             'name': data['given_name'],
             'last_name': data['family_name'],
             'birth_date': "1990-01-01",
             'rol': 1
         }
-        print(user)
-        print(type(user))
         
         if tempUser.exists():
                 tempUser = User.objects.get(email=user['email'])
-                data = generateToke(tempUser, user['rol_id'])
-                print(data)
+                data = generateToke(tempUser, user['rol'])
                 response = JsonResponse(data, status=status.HTTP_200_OK)
                 response.set_cookie('refresh_token', data['refresh'], httponly=True)
                 return response
@@ -184,7 +178,7 @@ class GoogleSocialAuthView(generics.GenericAPIView):
             # Login
             tempUser = User.objects.get(email=data['email'])
             data = generateToke(tempUser, tempUser.rol_id)
-            print(data)
+    
             response = JsonResponse(data, status=status.HTTP_200_OK)
             response.set_cookie('refresh_token', data['refresh'], httponly=True)
             return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
