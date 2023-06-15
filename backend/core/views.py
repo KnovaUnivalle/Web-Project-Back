@@ -1,8 +1,7 @@
-from rest_framework import status, generics, permissions, status, serializers
+from rest_framework import status, generics, status
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes
-from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 from .utils import *
 from .validations import *
@@ -58,6 +57,7 @@ def login(request):
     else:
         return JsonResponse({'error': 'Invalid credentials.'}, status=status.HTTP_401_UNAUTHORIZED)
 
+
 @api_view(['POST'])
 def logout(request):
     token = request.COOKIES.get('refresh_token')
@@ -72,7 +72,7 @@ def logout(request):
 
 
 class CustomerView(APIView):
-	permission_classes = [permissions.IsAuthenticated, IsCustomer]
+	permission_classes = [IsAuthenticated, IsCustomer]
 	def get(self, request):
             token = request.headers.get('Authorization').split(' ')[1]
             data = decode_token(token)
@@ -80,8 +80,9 @@ class CustomerView(APIView):
             serializers = UserSerializer(user)
             return JsonResponse(serializers.data, status=status.HTTP_200_OK)
         
+
 class ManagerView(APIView):
-	permission_classes = [permissions.IsAuthenticated, IsManager]
+	permission_classes = [IsAuthenticated, IsManager]
 	def get(self, request):
             token = request.headers.get('Authorization').split(' ')[1]
             data = decode_token(token)
@@ -90,7 +91,7 @@ class ManagerView(APIView):
             return JsonResponse(serializers.data, status=status.HTTP_200_OK)
         
 class AdminView(APIView):
-	permission_classes = [permissions.IsAuthenticated, IsAdmin]
+	permission_classes = [IsAuthenticated, IsAdmin]
 	def get(self, request):
             token = request.headers.get('Authorization').split(' ')[1]
             data = decode_token(token)
@@ -98,45 +99,6 @@ class AdminView(APIView):
             serializers = AdminSerializer(user)
             return JsonResponse(serializers.data, status=status.HTTP_200_OK)
             
-
-class MyProtectedView(APIView):
-    permission_classes = [IsAuthenticated]
-    def get(self, request):
-        # Lógica de la vista protegida
-        return JsonResponse("Acceso permitido para usuarios autenticados")
-
-
-class GoogleLoginSerializer(serializers.Serializer):
-    # Define los campos de serialización necesarios para el inicio de sesión con Google
-
-    def validate(self, attrs):
-        # Realiza la validación necesaria para el inicio de sesión con Google
-        return attrs
-
-
-class GoogleLogin(generics.GenericAPIView):
-    permission_classes = [permissions.AllowAny]
-    serializer_class = GoogleLoginSerializer
-
-    def post(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        email = serializer.validated_data['email']
-
-        User = get_user_model()
-
-        # Comprueba si ya existe un usuario con el correo electrónico proporcionado
-        try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            user = User.objects.create(email=email)
-            
-        refresh = RefreshToken.for_user(user)
-
-        return JsonResponse({
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-        })
 
 @permission_classes((AllowAny, ))
 class GoogleSocialAuthView(generics.GenericAPIView):
@@ -181,4 +143,4 @@ class GoogleSocialAuthView(generics.GenericAPIView):
     
             response = JsonResponse(data, status=status.HTTP_200_OK)
             response.set_cookie('refresh_token', data['refresh'], httponly=True)
-            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+            return response
