@@ -49,7 +49,7 @@ def login(request):
             return JsonResponse({'error': 'Invalid credentials.'}, status=status.HTTP_401_UNAUTHORIZED)
 
     if verify_password(password, user.password):
-        data = generateToke(user, rol_id)
+        data = generateToken(user, rol_id)
     
         response = JsonResponse(data, status=status.HTTP_200_OK)
         response.set_cookie('refresh_token', data['refresh'], httponly=True)
@@ -98,8 +98,8 @@ class AdminView(APIView):
             user = Admin.objects.get(id=data["user_id"])
             serializers = AdminSerializer(user)
             return JsonResponse(serializers.data, status=status.HTTP_200_OK)
-            
-
+        
+      
 @permission_classes((AllowAny, ))
 class GoogleSocialAuthView(generics.GenericAPIView):
 
@@ -107,7 +107,7 @@ class GoogleSocialAuthView(generics.GenericAPIView):
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
-        
+
         serializer.is_valid(raise_exception=True)
         data = ((serializer.validated_data)['auth_token'])
     
@@ -123,7 +123,7 @@ class GoogleSocialAuthView(generics.GenericAPIView):
         
         if tempUser.exists():
                 tempUser = User.objects.get(email=user['email'])
-                data = generateToke(tempUser, user['rol'])
+                data = generateToken(tempUser, user['rol'])
                 response = JsonResponse(data, status=status.HTTP_200_OK)
                 response.set_cookie('refresh_token', data['refresh'], httponly=True)
                 return response
@@ -139,7 +139,7 @@ class GoogleSocialAuthView(generics.GenericAPIView):
 
             # Login
             tempUser = User.objects.get(email=data['email'])
-            data = generateToke(tempUser, tempUser.rol_id)
+            data = generateToken(tempUser, tempUser.rol_id)
     
             response = JsonResponse(data, status=status.HTTP_200_OK)
             response.set_cookie('refresh_token', data['refresh'], httponly=True)

@@ -2,7 +2,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 import random
 import string
 
-def generateToke(user, rol):
+def generateToken(user, rol):
     # Generate token for user using JWT
     refresh = RefreshToken.for_user(user)
     refresh['rol_id'] = rol
