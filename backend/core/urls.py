@@ -14,7 +14,8 @@ router.register(r'suggestion', SuggestionViewSet)
 
 urlpatterns = [
     path('admin/register/', registerAdmin, name='registerAdmin'),
-    path('user/register/', RegisterUser.as_view(), name='resgisterUser'),
+    path('customer/register/', CustomerRegisterView.as_view(), name='registerCustomer'),
+    path('manager/register/', ManagerRegisterView.as_view(), name='registerManager'),
     path('login/', login, name='login'),
     path('logout/', logout, name='logout'),
     path('customer/', CustomerView.as_view(), name='customer'),

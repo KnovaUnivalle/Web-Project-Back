@@ -16,22 +16,6 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 		model = UserModel
 		fields = '__all__'
 
-	def create(self, clean_data):
-		email = clean_data['email']
-		password = clean_data['password']
-		rol_data = clean_data['rol']
-		name = clean_data['name']
-		last_name = clean_data['last_name']
-		birth_date = clean_data['birth_date']
-		rol = Rol.objects.get(id=rol_data)  # Obtener el objeto Rol existente por su nombre
-		user_obj = UserModel.objects.create_user(email=email, password=password)
-		user_obj.rol = rol  # Asignar el objeto Rol al campo rol
-		user_obj.name = name
-		user_obj.last_name = last_name
-		user_obj.birth_date = birth_date
-		user_obj.save()
-		return user_obj
-
 class UserLoginSerializer(serializers.Serializer):
 	email = serializers.EmailField()
 	password = serializers.CharField()

@@ -13,19 +13,29 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 
 @permission_classes((AllowAny, ))
-class RegisterUser(generics.CreateAPIView):
+class CustomerRegisterView(generics.CreateAPIView):
     def post(self, request):
-        print('=====================================')
-        print(request.data)
-        print(type(request.data))
-        serializer = UserSerializer(data=request.data)
+        request.data['rol'] = 1
+        serializer = UserRegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
             user.password = encrypt_password(user.password)
             user.save()
             return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
 
+@permission_classes((AllowAny, ))
+class ManagerRegisterView(generics.CreateAPIView):
+    def post(self, request):
+        request.data['rol'] = 2
+        serializer = UserRegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            user.password = encrypt_password(user.password)
+            user.save()
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(["POST"])
 def registerAdmin(request):
@@ -161,13 +171,11 @@ class GoogleSocialAuthView(generics.GenericAPIView):
             'birth_date': "1990-01-01",
             'rol': 1
         }
-        print(user)
-        print(type(user))
-        
+
         if tempUser.exists():
                 tempUser = User.objects.get(email=user['email'])
                 data = generateToke(tempUser, user['rol_id'])
-                print(data)
+                
                 response = JsonResponse(data, status=status.HTTP_200_OK)
                 response.set_cookie('refresh_token', data['refresh'], httponly=True)
                 return response
@@ -184,7 +192,7 @@ class GoogleSocialAuthView(generics.GenericAPIView):
             # Login
             tempUser = User.objects.get(email=data['email'])
             data = generateToke(tempUser, tempUser.rol_id)
-            print(data)
+            
             response = JsonResponse(data, status=status.HTTP_200_OK)
             response.set_cookie('refresh_token', data['refresh'], httponly=True)
             return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
