@@ -12,16 +12,29 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 
 @permission_classes((AllowAny, ))
-class RegisterUser(generics.CreateAPIView):
+class CustomerRegisterView(generics.CreateAPIView):
     def post(self, request):
-        serializer = UserSerializer(data=request.data)
+        request.data['rol'] = 1
+        serializer = UserRegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
             user.password = encrypt_password(user.password)
             user.save()
             return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
 
+@permission_classes((AllowAny, ))
+class ManagerRegisterView(generics.CreateAPIView):
+    def post(self, request):
+        request.data['rol'] = 2
+        serializer = UserRegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            user.password = encrypt_password(user.password)
+            user.save()
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(["POST"])
 def registerAdmin(request):
