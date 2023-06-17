@@ -1,9 +1,9 @@
-from rest_framework import status, generics, permissions, status, serializers
+from rest_framework import status, generics, status
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes
-from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
+from .utils import *
 from .validations import *
 from .models import Admin, User
 from .serializers import *
@@ -11,17 +11,30 @@ from .permission import IsCustomer, IsManager, IsAdmin
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 
+@permission_classes((AllowAny, ))
+class CustomerRegisterView(generics.CreateAPIView):
+    def post(self, request):
+        request.data['rol'] = 1
+        serializer = UserRegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            user.password = encrypt_password(user.password)
+            user.save()
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
 
-@api_view(["POST"])
-def registerUser(request):
-    serializer = UserSerializer(data=request.data)
-    if serializer.is_valid():
-        user = serializer.save()
-        user.password = encrypt_password(user.password)
-        user.save()
-        return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
-    return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+@permission_classes((AllowAny, ))
+class ManagerRegisterView(generics.CreateAPIView):
+    def post(self, request):
+        request.data['rol'] = 2
+        serializer = UserRegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            user.password = encrypt_password(user.password)
+            user.save()
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(["POST"])
 def registerAdmin(request):
@@ -49,18 +62,14 @@ def login(request):
             return JsonResponse({'error': 'Invalid credentials.'}, status=status.HTTP_401_UNAUTHORIZED)
 
     if verify_password(password, user.password):
-        refresh = RefreshToken.for_user(user)
-        refresh['rol_id'] = rol_id
-        data = {
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-            'rol_id': rol_id
-        }
+        data = generateToken(user, rol_id)
+    
         response = JsonResponse(data, status=status.HTTP_200_OK)
-        response.set_cookie('refresh_token', str(refresh), httponly=True)
+        response.set_cookie('refresh_token', data['refresh'], httponly=True)
         return response
     else:
         return JsonResponse({'error': 'Invalid credentials.'}, status=status.HTTP_401_UNAUTHORIZED)
+
 
 @api_view(['POST'])
 def logout(request):
@@ -76,7 +85,7 @@ def logout(request):
 
 
 class CustomerView(APIView):
-	permission_classes = [permissions.IsAuthenticated, IsCustomer]
+	permission_classes = [IsAuthenticated, IsCustomer]
 	def get(self, request):
             token = request.headers.get('Authorization').split(' ')[1]
             data = decode_token(token)
@@ -84,8 +93,9 @@ class CustomerView(APIView):
             serializers = UserSerializer(user)
             return JsonResponse(serializers.data, status=status.HTTP_200_OK)
         
+
 class ManagerView(APIView):
-	permission_classes = [permissions.IsAuthenticated, IsManager]
+	permission_classes = [IsAuthenticated, IsManager]
 	def get(self, request):
             token = request.headers.get('Authorization').split(' ')[1]
             data = decode_token(token)
@@ -94,65 +104,56 @@ class ManagerView(APIView):
             return JsonResponse(serializers.data, status=status.HTTP_200_OK)
         
 class AdminView(APIView):
-	permission_classes = [permissions.IsAuthenticated, IsAdmin]
+	permission_classes = [IsAuthenticated, IsAdmin]
 	def get(self, request):
             token = request.headers.get('Authorization').split(' ')[1]
             data = decode_token(token)
             user = Admin.objects.get(id=data["user_id"])
             serializers = AdminSerializer(user)
             return JsonResponse(serializers.data, status=status.HTTP_200_OK)
-            
-
-class MyProtectedView(APIView):
-    permission_classes = [IsAuthenticated]
-    def get(self, request):
-        # Lógica de la vista protegida
-        return JsonResponse("Acceso permitido para usuarios autenticados")
-
-
-class GoogleLoginSerializer(serializers.Serializer):
-    # Define los campos de serialización necesarios para el inicio de sesión con Google
-
-    def validate(self, attrs):
-        # Realiza la validación necesaria para el inicio de sesión con Google
-        return attrs
-
-
-class GoogleLogin(generics.GenericAPIView):
-    permission_classes = [permissions.AllowAny]
-    serializer_class = GoogleLoginSerializer
-
-    def post(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        email = serializer.validated_data['email']
-
-        User = get_user_model()
-
-        # Comprueba si ya existe un usuario con el correo electrónico proporcionado
-        try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            user = User.objects.create(email=email)
-
-        refresh = RefreshToken.for_user(user)
-
-        return JsonResponse({
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-        })
-
+        
+      
 @permission_classes((AllowAny, ))
 class GoogleSocialAuthView(generics.GenericAPIView):
 
     serializer_class = GoogleSocialAuthSerializer
 
     def post(self, request):
-        """
-        POST with "auth_token"
-        Send an idtoken as from google to get user information
-        """
         serializer = self.serializer_class(data=request.data)
+
         serializer.is_valid(raise_exception=True)
         data = ((serializer.validated_data)['auth_token'])
-        return JsonResponse(data, status=status.HTTP_200_OK)
+    
+        tempUser = User.objects.filter(email=data['email'])
+        user = {
+            'email': data['email'],
+            'password': generate_random_password(),
+            'name': data['given_name'],
+            'last_name': data['family_name'],
+            'birth_date': "1990-01-01",
+            'rol': 1
+        }
+        
+        if tempUser.exists():
+                tempUser = User.objects.get(email=user['email'])
+                data = generateToken(tempUser, user['rol'])
+                response = JsonResponse(data, status=status.HTTP_200_OK)
+                response.set_cookie('refresh_token', data['refresh'], httponly=True)
+                return response
+        else:
+            ## Register user
+            serializer = UserSerializer(data=user)
+            if serializer.is_valid():
+                user = serializer.save()
+                user.password = encrypt_password(user.password)
+                user.save()
+            else:
+                return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+            # Login
+            tempUser = User.objects.get(email=data['email'])
+            data = generateToken(tempUser, tempUser.rol_id)
+    
+            response = JsonResponse(data, status=status.HTTP_200_OK)
+            response.set_cookie('refresh_token', data['refresh'], httponly=True)
+            return response
