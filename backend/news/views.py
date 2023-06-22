@@ -23,7 +23,7 @@ class NewsCreateView(APIView):
 class NewsUpdateView(APIView):
     def post(self, request, id):
         news = News.objects.get(id=id)
-        serializer = NewsSerializer(news, data=request.data)
+        serializer = NewsSerializer(news, data=request.data, partial=True)
         if serializer.is_valid():
             news = serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
