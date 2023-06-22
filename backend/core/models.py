@@ -25,6 +25,7 @@ class Rol(models.Model):
 
 class Admin(models.Model):
     id = models.BigAutoField(primary_key=True)
+    is_active = models.BooleanField(default=True)
     email = models.EmailField(unique=True, max_length=50)
     password = models.CharField(max_length=100)
 

@@ -37,6 +37,7 @@ class ManagerRegisterView(generics.CreateAPIView):
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(["POST"])
+@permission_classes((AllowAny, ))
 def registerAdmin(request):
     serializer = AdminSerializer(data=request.data)
     if serializer.is_valid():
@@ -48,6 +49,7 @@ def registerAdmin(request):
 
 
 @api_view(['POST'])
+@permission_classes((AllowAny, ))
 def login(request):
     email = request.data.get('email')
     password = request.data.get('password')
@@ -72,6 +74,7 @@ def login(request):
 
 
 @api_view(['POST'])
+@permission_classes((AllowAny, ))
 def logout(request):
     token = request.COOKIES.get('refresh_token')
     try:
@@ -84,8 +87,18 @@ def logout(request):
             return JsonResponse({'error': 'No se pudo invalidar el token de acceso.'}, status=status.HTTP_400_BAD_REQUEST)
 
 
+@permission_classes((IsAuthenticated, IsCustomer))
 class CustomerView(APIView):
-	permission_classes = [IsAuthenticated, IsCustomer]
+	def get(self, request):
+            token = request.headers.get('Authorization').split(' ')[1]
+            data = decode_token(token)
+            user = User.objects.get(id=data["user_id"])
+            serializers = UserSerializer(user)
+            return JsonResponse(serializers.data, status=status.HTTP_200_OK)
+        
+        
+@permission_classes((IsAuthenticated, IsManager))
+class ManagerView(APIView):
 	def get(self, request):
             token = request.headers.get('Authorization').split(' ')[1]
             data = decode_token(token)
@@ -94,17 +107,8 @@ class CustomerView(APIView):
             return JsonResponse(serializers.data, status=status.HTTP_200_OK)
         
 
-class ManagerView(APIView):
-	permission_classes = [IsAuthenticated, IsManager]
-	def get(self, request):
-            token = request.headers.get('Authorization').split(' ')[1]
-            data = decode_token(token)
-            user = User.objects.get(id=data["user_id"])
-            serializers = UserSerializer(user)
-            return JsonResponse(serializers.data, status=status.HTTP_200_OK)
-        
+@permission_classes((IsAuthenticated, IsAdmin))
 class AdminView(APIView):
-	permission_classes = [IsAuthenticated, IsAdmin]
 	def get(self, request):
             token = request.headers.get('Authorization').split(' ')[1]
             data = decode_token(token)

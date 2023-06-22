@@ -24,12 +24,11 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('google/', GoogleSocialAuthView.as_view()),
     # Creates the urls for POST, DELETE, PUT and GET
-    path('users/', list_user, name='list-users'),
-    path('users/latest/', list_latest_users, name='latest-users'),
-    path('users/<int:id>/', list_user_by_id, name='user-by-type'),
+    path('users/', UserListView.as_view(), name='list-users'),
     path('users/update/<int:id>/', update_user, name='update-user'),
-    path('admins/', list_user, name='list-admins'),
-    path('admin/latest/', list_latest_users, name='latest-users'),
-    path('admin/update/<int:id>/', update_user, name='update-user'),
+    path('users/disable/<int:id>/', disable_user, name='delete-user'),
+    path('admins/', AdminListView.as_view(), name='list-admins'),
+    path('admin/update/<int:id>/', update_admin, name='update-user'),
+    path('admin/disable/<int:id>/', disable_admin, name='delete-user'),
     path('crud/', include(router.urls)),
 ]
