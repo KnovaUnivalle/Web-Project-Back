@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core.apps.CoreConfig',
+    'news.apps.NewsConfig',
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
