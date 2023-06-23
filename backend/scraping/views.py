@@ -13,13 +13,14 @@ def searchProduct(request):
     if product:
         mercadoLibreProducts = mercadoLibre(product)
         loPidoProducts = loPido(product)
+        tiendeoProducts = tiendeo(product)
 
         # Combines the scraping of the different sites
-        products = loPidoProducts + mercadoLibreProducts
+        products = loPidoProducts + tiendeoProducts + mercadoLibreProducts
 
         # If the request was unsuccessful an error response is returned.
         if not products:
-            return JsonResponse({'error': 'Error en la solicitud'}, status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse({'error': 'Request error'}, status=status.HTTP_404_NOT_FOUND)
 
         else:
             return JsonResponse(products, status=status.HTTP_200_OK, safe=False,
@@ -38,12 +39,10 @@ def mercadoLibre(product):
         content = response.text
         soup = BeautifulSoup(content, 'html.parser')
 
-        # Localizes the main container of the products
-        box = soup.find(
-            'ol', class_='ui-search-layout ui-search-layout--stack shops__layout')
-
-        # Checks if the main container of the products was found
-        if box:
+        try:
+            # Localizes the main container of the products
+            box = soup.find(
+                'ol', class_='ui-search-layout ui-search-layout--stack shops__layout')
 
             # Localizes the list of products
             products = box.find_all(
@@ -73,7 +72,8 @@ def mercadoLibre(product):
 
             return productNames
 
-        return []
+        except (AttributeError, TypeError):
+            return []
 
     else:
         return []
@@ -87,22 +87,23 @@ def loPido(product):
         content = response.text
         soup = BeautifulSoup(content, 'html.parser')
 
-        # Checks if the search returned results
-        notFound = soup.find(
-            'span', class_='vtex-search-result-3-x-searchNotFoundTextListLine c-muted-1 b')
+        try:
+            # Checks if the search returned results
+            notFound = soup.find(
+                'span', class_='vtex-search-result-3-x-searchNotFoundTextListLine c-muted-1 b')
 
-        if notFound:
-            return []
+            if notFound:
+                return []
 
-        # Localizes the main container of the products
-        box = soup.find('div', class_='flex flex-column min-vh-100 w-100'
-                        ).find(
-            'script', attrs={"type": "application/ld+json"})
+            # Localizes the main container of the products
+            box = soup.find('div', class_='flex flex-column min-vh-100 w-100'
+                            )
+            # Checks if the main container of the products was found
+            boxScript = box.find(
+                'script', attrs={"type": "application/ld+json"})
 
-        # Checks if the main container of the products was found
-        if box:
-
-            text = box.get_text()
+            # Checks if the script container was found
+            text = boxScript.get_text()
             dictData = json.loads(text)
 
             productNames = [{'name': product['item']['name'], 'price': product['item']['offers']['offers'][0]['price'],
@@ -112,7 +113,77 @@ def loPido(product):
 
             return productNames
 
+        except (AttributeError, TypeError):
+            return []
+
+    else:
         return []
+
+
+def tiendeo(product):
+    url = f'https://www.tiendeo.com.co/ofertas/{product}'
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        content = response.text
+        soup = BeautifulSoup(content, 'html.parser')
+
+        try:
+            # Localizes the main container of the products
+            box = soup.find(
+                'section', class_='sc-bRlCZA hlYIsl js-print-article-container js-print-container')
+
+            # Localizes the list of products
+            products = box.find('section', role='region').find(
+                'ul', class_='sc-edLOhm fkWkqK').find_all(
+                'li', class_='sc-jmfXTE eXDiee')
+
+            # Gets the product name
+            def productName(tag):
+                return tag.find('h3').get_text()
+
+            # Gets the product price
+            def productPrice(tag):
+                priceDiv = tag.find(
+                    'div', class_='sc-4e35cfdd-0 sc-4e35cfdd-3 sc-234eed98-13 sc-a4883c8d-9 '
+                    'kxnaJu hyLhly hnZwKt fmetNz').get_text()
+
+                price = priceDiv.split('$')[1] if priceDiv else '0'
+                return price
+
+            # Gets the product image
+            def productImage(tag):
+                return tag.find('div', class_='sc-234eed98-4 sc-a4883c8d-2 bjExpC cJLFLA').find(
+                    'img').get('src')
+
+            # Gets the product url
+            def productUrl(tag):
+                hasUrl = tag.find(
+                    'a', class_='sc-a4883c8d-0 ecBHID')
+
+                if hasUrl:
+                    return hasUrl.get('href')
+
+                else:
+
+                    article = tag.find(
+                        'article', class_='sc-234eed98-0 sc-a4883c8d-1 qpzBM hIUzyD products '
+                        'js-print-article-item')
+
+                    catalogId = article.get('data-idcatalog')
+                    productId = article.get('data-id')
+
+                    url = f'https://www.tiendeo.com.co/Catalogos/{catalogId}?priorElementId={productId}'
+                    return url
+
+            # Creates the objects
+            productNames = [{'name': productName(i), 'price': productPrice(i), 'image': productImage(i),
+                             'url': productUrl(i), 'store': 'Tiendeo'}
+                            for i in products[:12]]
+            return productNames
+
+        except (AttributeError, TypeError):
+            return []
 
     else:
         return []
