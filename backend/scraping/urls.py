@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import mercadoLibre
+from .views import searchProduct
 
 urlpatterns = [
-    path('mercadolibre/', mercadoLibre, name='mercadolibre'),
+    path('', searchProduct, name='searchProduct'),
 ]
