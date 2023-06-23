@@ -14,14 +14,14 @@ def searchProduct(request):
         mercadoLibreProducts = mercadoLibre(product)
         loPidoProducts = loPido(product)
 
-        # If the request was not successful an error response is returned.
-        if not mercadoLibreProducts and not loPidoProducts:
+        # Combines the scraping of the different sites
+        products = loPidoProducts + mercadoLibreProducts
+
+        # If the request was unsuccessful an error response is returned.
+        if not products:
             return JsonResponse({'error': 'Error en la solicitud'}, status=status.HTTP_404_NOT_FOUND)
 
         else:
-            # Combines the scraping of the different sites
-            products = mercadoLibreProducts + loPidoProducts
-
             return JsonResponse(products, status=status.HTTP_200_OK, safe=False,
                                 json_dumps_params={'ensure_ascii': False})
 
@@ -42,36 +42,40 @@ def mercadoLibre(product):
         box = soup.find(
             'ol', class_='ui-search-layout ui-search-layout--stack shops__layout')
 
-        # Localizes the list of products
-        products = box.find_all(
-            'li', class_='ui-search-layout__item shops__layout-item')
+        # Checks if the main container of the products was found
+        if box:
 
-        # Gets the product name
-        def productName(tag):
-            return tag.find('h2', class_='ui-search-item__title shops__item-title').get_text()
+            # Localizes the list of products
+            products = box.find_all(
+                'li', class_='ui-search-layout__item shops__layout-item')
 
-        # Gets the product price
-        def productPrice(tag):
-            return tag.find('div', class_='ui-search-price__second-line shops__price-second-line').find(
-                'span', class_='price-tag-text-sr-only').get_text().split()[0]
+            # Gets the product name
+            def productName(tag):
+                return tag.find('h2', class_='ui-search-item__title shops__item-title').get_text()
 
-        # Gets the product image
-        def productImage(tag):
-            return tag.find('img').get('data-src')
+            # Gets the product price
+            def productPrice(tag):
+                return tag.find('div', class_='ui-search-price__second-line shops__price-second-line').find(
+                    'span', class_='price-tag-text-sr-only').get_text().split()[0]
 
-        # Gets the product url
-        def productUrl(tag):
-            return tag.find('a', class_='ui-search-link').get('href')
+            # Gets the product image
+            def productImage(tag):
+                return tag.find('img').get('data-src')
 
-        # Creates the objects
-        productNames = [{'name': productName(i), 'price': productPrice(i), 'image': productImage(i),
-                         'url': productUrl(i), 'store': 'Mercado Libre'}
-                        for i in products[:20]]
+            # Gets the product url
+            def productUrl(tag):
+                return tag.find('a', class_='ui-search-link').get('href')
 
-        return productNames
+            # Creates the objects
+            productNames = [{'name': productName(i), 'price': productPrice(i), 'image': productImage(i),
+                             'url': productUrl(i), 'store': 'Mercado Libre'}
+                            for i in products[:20]]
+
+            return productNames
+
+        return []
 
     else:
-
         return []
 
 
@@ -88,22 +92,27 @@ def loPido(product):
             'span', class_='vtex-search-result-3-x-searchNotFoundTextListLine c-muted-1 b')
 
         if notFound:
-            return [{'error': 'not found'}]
+            return []
 
         # Localizes the main container of the products
         box = soup.find('div', class_='flex flex-column min-vh-100 w-100'
                         ).find(
-            'script', attrs={"type": "application/ld+json"}).get_text()
+            'script', attrs={"type": "application/ld+json"})
 
-        dictData = json.loads(box)
+        # Checks if the main container of the products was found
+        if box:
 
-        productNames = [{'name': product['item']['name'], 'price': product['item']['offers']['offers'][0]['price'],
-                     'image': product['item']['image'], 'url': product['item']['@id'],
-                     'store': 'Lopido.com'} 
-                     for product in dictData['itemListElement'][:16]]
-        
-        return productNames
-    
+            text = box.get_text()
+            dictData = json.loads(text)
+
+            productNames = [{'name': product['item']['name'], 'price': product['item']['offers']['offers'][0]['price'],
+                             'image': product['item']['image'], 'url': product['item']['@id'],
+                             'store': 'Lopido.com'}
+                            for product in dictData['itemListElement'][:16]]
+
+            return productNames
+
+        return []
+
     else:
-
         return []
