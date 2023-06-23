@@ -1,16 +1,27 @@
 from rest_framework.views import APIView
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
-from rest_framework import status, permissions
+from rest_framework import status, permissions, generics, filters
 from .serializers import NewsSerializer
 from .models import News
 
 
-class NewsListView(APIView):
-    def get(self, request):
-        news = News.objects.order_by('-id')[:10]
-        serializer = NewsSerializer(news, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+class NewsListView(generics.ListAPIView):
+    queryset = News.objects.all()
+    serializer_class = NewsSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        query_param = self.request.query_params.get('title')
+
+        if query_param:
+            queryset = queryset.filter(title__icontains=query_param)
+        return queryset
     
+
+
 class NewsCreateView(APIView):
     def post(self, request):
         serializer = NewsSerializer(data=request.data)
