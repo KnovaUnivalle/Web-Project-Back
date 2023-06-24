@@ -14,9 +14,10 @@ def searchProduct(request):
         mercadoLibreProducts = mercadoLibre(product)
         loPidoProducts = loPido(product)
         tiendeoProducts = tiendeo(product)
+        laCesteriaProducts = laCesteria(product)
 
         # Combines the scraping of the different sites
-        products = loPidoProducts + tiendeoProducts + mercadoLibreProducts
+        products = laCesteriaProducts + loPidoProducts + tiendeoProducts + mercadoLibreProducts
 
         # If the request was unsuccessful an error response is returned.
         if not products:
@@ -98,13 +99,10 @@ def loPido(product):
             # Localizes the main container of the products
             box = soup.find('div', class_='flex flex-column min-vh-100 w-100'
                             )
-            # Checks if the main container of the products was found
             boxScript = box.find(
-                'script', attrs={"type": "application/ld+json"})
+                'script', type="application/ld+json").get_text()
 
-            # Checks if the script container was found
-            text = boxScript.get_text()
-            dictData = json.loads(text)
+            dictData = json.loads(boxScript)
 
             productNames = [{'name': product['item']['name'], 'price': product['item']['offers']['offers'][0]['price'],
                              'image': product['item']['image'], 'url': product['item']['@id'],
@@ -180,6 +178,60 @@ def tiendeo(product):
             productNames = [{'name': productName(i), 'price': productPrice(i), 'image': productImage(i),
                              'url': productUrl(i), 'store': 'Tiendeo'}
                             for i in products[:12]]
+            return productNames
+
+        except (AttributeError, TypeError):
+            return []
+
+    else:
+        return []
+
+
+def laCesteria(product):
+    url = 'https://lacesteria.co/search?type=product&options%5Bprefix%5D=last&options%5Bunavailable_'\
+        f'products%5D=hide&q={product}'
+
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        content = response.text
+        soup = BeautifulSoup(content, 'html.parser')
+
+        try:
+            # Localizes the main container of the products
+            box = soup.find(
+                'div', class_='product-list product-list--collection')
+
+            # Localizes the list of products
+            products = box.find_all(
+                'div', class_='product-item product-item--vertical 1/3--tablet-and-up 1/4--desk')
+
+            # Gets the product name
+            def productName(tag):
+                return tag.find('a', class_='product-item__title text--strong link').get_text()
+
+            # Gets the product price
+            def productPrice(tag):
+                priceWithPoint = tag.find('div', class_='product-item__price-list price-list').find(
+                    'span', class_='price').get_text().split('$')[1]
+
+                price = priceWithPoint.replace('.', '')
+
+                return price
+
+            # Gets the product image
+            def productImage(tag):
+                return 'https:' + tag.find('noscript').find('img').get('src')
+
+            # Gets the product url
+            def productUrl(tag):
+                return 'https://lacesteria.co' + tag.find('a', class_='product-item__title text--strong link').get('href')
+
+            # Creates the objects
+            productNames = [{'name': productName(i), 'price': productPrice(i), 'image': productImage(i),
+                             'url': productUrl(i), 'store': 'La Cestería'}
+                            for i in products[:24]]
+
             return productNames
 
         except (AttributeError, TypeError):
