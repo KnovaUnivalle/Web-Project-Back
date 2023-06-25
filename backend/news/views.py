@@ -10,7 +10,7 @@ class NewsListView(generics.ListAPIView):
     queryset = News.objects.all()
     serializer_class = NewsSerializer
     filter_backends = [filters.SearchFilter]
-    search_fields = ['title']
+    search_fields = ['title','id']
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -39,3 +39,10 @@ class NewsUpdateView(APIView):
             news = serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class NewsGetView(APIView):
+    def get(self, request, id):
+        news = News.objects.get(id=id)
+        serializer = NewsSerializer(news)
+        return Response(serializer.data, status=status.HTTP_200_OK)
