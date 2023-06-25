@@ -12,7 +12,7 @@ from rest_framework.response import Response
 @permission_classes((IsAuthenticated, IsAdmin, ))
 class AdminListView(generics.ListAPIView):
     queryset = Admin.objects.all()
-    serializer_class = AdminSerializer
+    serializer_class = AdminSerializerReduce
     filterset_fields = ['id', 'email', 'is_active']
 
     def get_queryset(self):
@@ -21,6 +21,14 @@ class AdminListView(generics.ListAPIView):
         if 'last' in self.request.GET:
             return Admin.objects.order_by('-id')[:10]
         return queryset
+    
+    def filter_queryset(self, queryset):
+        search_param = self.request.query_params.get('q')
+        if search_param:
+            queryset = queryset.filter(
+                Q(email__icontains=search_param)
+            )
+        return queryset
 
 
 @permission_classes((IsAuthenticated, IsAdminOrManager,  ))
@@ -28,7 +36,7 @@ class UserListView(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializerReduce
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['id', 'rol', 'name', 'last_name', 'email', 'birth_date', 'is_active']
+    filterset_fields = ['id', 'rol', 'name', 'last_name', 'email', 'is_active']
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -46,7 +54,17 @@ class UserListView(generics.ListAPIView):
                 Q(email__icontains=search_param)
             )
         return queryset
+    
 
+@api_view(['GET'])
+def user_id(request, id):
+    try:
+        user = User.objects.get(id=id)
+        serializer = UserSerializerReduce(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+    
 
 @api_view(['PUT'])
 @permission_classes((IsAuthenticated, IsAdmin, ))
@@ -56,7 +74,7 @@ def update_admin(request, id):
     except Admin.DoesNotExist:
         return Response({'error': 'Usuario no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
 
-    serializer = AdminSerializer(admin, data=request.data, partial=True)
+    serializer = AdminSerializerReduce(admin, data=request.data, partial=True)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -70,7 +88,7 @@ def disable_admin(request, id):
         admin = Admin.objects.get(id=id)
         admin.is_active = False
         admin.save()
-        serializer = AdminSerializer(admin)
+        serializer = AdminSerializerReduce(admin)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except Admin.DoesNotExist:
         return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
@@ -84,7 +102,7 @@ def update_user(request, id):
     except User.DoesNotExist:
         return Response({'error': 'Usuario no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
 
-    serializer = UserSerializer(user, data=request.data, partial=True)
+    serializer = UserSerializerReduce(user, data=request.data, partial=True)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -98,7 +116,7 @@ def disable_user(request, id):
         user = User.objects.get(id=id)
         user.is_active = False
         user.save()
-        serializer = UserSerializer(user)
+        serializer = UserSerializerReduce(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
     except User.DoesNotExist:
         return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)

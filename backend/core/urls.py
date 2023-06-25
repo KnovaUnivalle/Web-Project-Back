@@ -25,6 +25,7 @@ urlpatterns = [
     path('google/', GoogleSocialAuthView.as_view()),
     # Creates the urls for POST, DELETE, PUT and GET
     path('users/', UserListView.as_view(), name='list-users'),
+    path('users/<int:id>/', user_id, name='user-id'),
     path('users/update/<int:id>/', update_user, name='update-user'),
     path('users/disable/<int:id>/', disable_user, name='delete-user'),
     path('admins/', AdminListView.as_view(), name='list-admins'),

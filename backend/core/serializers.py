@@ -33,6 +33,12 @@ class AdminSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class AdminSerializerReduce(serializers.ModelSerializer):
+    class Meta:
+        model = Admin
+        fields = ('id', 'email', 'is_active')
+
+
 class RolSerializer(serializers.ModelSerializer):
     class Meta:
         model = Rol
@@ -48,8 +54,7 @@ class UserSerializer(serializers.ModelSerializer):
 class UserSerializerReduce(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'rol', 'is_active')
-
+        fields = ('id', 'rol', 'name', 'last_name', 'email', 'birth_date', 'is_active')
 
 
 class ProductSerializer(serializers.ModelSerializer):
