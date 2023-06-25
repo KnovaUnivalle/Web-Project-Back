@@ -1,10 +1,11 @@
-from rest_framework import status, viewsets, permissions, generics
+from rest_framework import status, viewsets, permissions, generics, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from .serializers import *
 from .permission import *
 from .models import *
+from django.db.models import Q
 
 from rest_framework.response import Response
 
@@ -12,7 +13,6 @@ from rest_framework.response import Response
 class AdminListView(generics.ListAPIView):
     queryset = Admin.objects.all()
     serializer_class = AdminSerializer
-    filter_backends = [DjangoFilterBackend]
     filterset_fields = ['id', 'email', 'is_active']
 
     def get_queryset(self):
@@ -27,7 +27,7 @@ class AdminListView(generics.ListAPIView):
 class UserListView(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializerReduce
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['id', 'rol', 'name', 'last_name', 'email', 'birth_date', 'is_active']
 
     def get_queryset(self):
@@ -35,6 +35,16 @@ class UserListView(generics.ListAPIView):
         
         if 'last' in self.request.GET:
             return User.objects.order_by('-id')[:10]
+        return queryset
+
+    def filter_queryset(self, queryset):
+        search_param = self.request.query_params.get('q')
+        if search_param:
+            queryset = queryset.filter(
+                Q(name__icontains=search_param) |
+                Q(last_name__icontains=search_param) |
+                Q(email__icontains=search_param)
+            )
         return queryset
 
 
