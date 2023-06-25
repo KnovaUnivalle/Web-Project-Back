@@ -26,7 +26,7 @@ class AdminListView(generics.ListAPIView):
 @permission_classes((IsAuthenticated, IsAdminOrManager,  ))
 class UserListView(generics.ListAPIView):
     queryset = User.objects.all()
-    serializer_class = UserSerializer
+    serializer_class = UserSerializerReduce
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['id', 'rol', 'name', 'last_name', 'email', 'birth_date', 'is_active']
 

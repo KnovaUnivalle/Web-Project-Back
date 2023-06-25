@@ -45,6 +45,13 @@ class UserSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class UserSerializerReduce(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'rol', 'is_active')
+
+
+
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
