@@ -1,4 +1,5 @@
 import requests
+from .pagination import CustomPagination
 from bs4 import BeautifulSoup
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -24,8 +25,10 @@ def searchProduct(request):
             return JsonResponse({'error': 'Request error'}, status=status.HTTP_404_NOT_FOUND)
 
         else:
-            return JsonResponse(products, status=status.HTTP_200_OK, safe=False,
-                                json_dumps_params={'ensure_ascii': False})
+            paginator = CustomPagination()
+            paginated_products = paginator.paginate_queryset(products, request)
+            return paginator.get_paginated_response(paginated_products)
+
 
     else:
         # If a "product" field is not provided an error response is returned.
