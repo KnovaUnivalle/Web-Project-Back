@@ -23,7 +23,7 @@ class AdminListView(generics.ListAPIView):
         return queryset
 
 
-@permission_classes((IsAuthenticated, IsAdmin, ))
+@permission_classes((IsAuthenticated, IsAdminOrManager,  ))
 class UserListView(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
