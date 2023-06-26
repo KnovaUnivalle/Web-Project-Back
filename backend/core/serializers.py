@@ -14,7 +14,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = UserModel
-		fields = '__all__'
+		fields = ('id', 'rol', 'name', 'last_name', 'email', 'birth_date', 'is_active')
 
 class UserLoginSerializer(serializers.Serializer):
 	email = serializers.EmailField()
@@ -33,6 +33,12 @@ class AdminSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class AdminSerializerReduce(serializers.ModelSerializer):
+    class Meta:
+        model = Admin
+        fields = ('id', 'email', 'is_active')
+
+
 class RolSerializer(serializers.ModelSerializer):
     class Meta:
         model = Rol
@@ -43,6 +49,12 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = '__all__'
+
+
+class UserSerializerReduce(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'rol', 'name', 'last_name', 'email', 'birth_date', 'is_active')
 
 
 class ProductSerializer(serializers.ModelSerializer):

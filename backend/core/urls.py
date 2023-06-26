@@ -14,8 +14,7 @@ router.register(r'suggestion', SuggestionViewSet)
 
 urlpatterns = [
     path('admin/register/', registerAdmin, name='registerAdmin'),
-    path('customer/register/', CustomerRegisterView.as_view(), name='registerCustomer'),
-    path('manager/register/', ManagerRegisterView.as_view(), name='registerManager'),
+    path('user/register/', UserRegisterView.as_view(), name='registerCustomer'),
     path('login/', login, name='login'),
     path('logout/', logout, name='logout'),
     path('customer/', CustomerView.as_view(), name='customer'),
@@ -25,6 +24,7 @@ urlpatterns = [
     path('google/', GoogleSocialAuthView.as_view()),
     # Creates the urls for POST, DELETE, PUT and GET
     path('users/', UserListView.as_view(), name='list-users'),
+    path('users/<int:id>/', user_id, name='user-id'),
     path('users/update/<int:id>/', update_user, name='update-user'),
     path('users/disable/<int:id>/', disable_user, name='delete-user'),
     path('admins/', AdminListView.as_view(), name='list-admins'),

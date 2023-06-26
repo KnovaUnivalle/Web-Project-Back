@@ -32,7 +32,7 @@ class NewsCreateView(APIView):
     
     
 class NewsUpdateView(APIView):
-    def post(self, request, id):
+    def put(self, request, id):
         news = News.objects.get(id=id)
         serializer = NewsSerializer(news, data=request.data, partial=True)
         if serializer.is_valid():

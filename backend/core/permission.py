@@ -35,3 +35,13 @@ class IsManager(BasePermission):
         except KeyError:
             return False
         
+
+class IsAdminOrManager(BasePermission):
+    def has_permission(self, request, view):
+        try:
+            token = request.headers.get('Authorization').split(' ')[1]
+            data = decode_token(token)
+            rol_id = data.get('rol_id')
+            return rol_id in [0, 2] 
+        except (KeyError, IndexError):
+            return False
