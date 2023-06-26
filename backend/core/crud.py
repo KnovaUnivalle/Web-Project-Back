@@ -1,7 +1,10 @@
 from rest_framework import status, viewsets, permissions, generics, filters
+from django.http import JsonResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
+from django.db.models import Count, Min
+from django.views import View
 from .serializers import *
 from .permission import *
 from .models import *
@@ -120,6 +123,49 @@ def disable_user(request, id):
         return Response(serializer.data, status=status.HTTP_200_OK)
     except User.DoesNotExist:
         return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+
+
+class ReportListView(View):
+    def get(self, request):
+        query_param = request.GET.get('q')
+
+        if query_param == 'top_products':
+            top_products = SearchHistory.objects.values('product_id').annotate(total_searches=Count('product_id')).order_by('-total_searches')[:5]
+            product_ids = [item['product_id'] for item in top_products]
+            top_products_list = Product.objects.filter(id__in=product_ids)
+
+            response_data = []
+            for product in top_products_list:
+                search_count = SearchHistory.objects.filter(product=product).count()
+                response_data.append({
+                    'id': product.id,
+                    'name': product.name,
+                    'price': product.price,
+                    'search_count': search_count
+                })
+
+            return JsonResponse(response_data, safe=False ,status=200)
+
+        elif query_param == 'top_users':
+            top_users = SearchHistory.objects.values('user_id').annotate(total_searches=Count('user')).order_by('-total_searches')[:5]
+            user_ids = [item['user_id'] for item in top_users]
+            top_users_list = User.objects.filter(id__in=user_ids)
+
+            response_data = []
+            for user in top_users_list:
+                search_count = SearchHistory.objects.filter(user=user).count()
+                response_data.append({
+                    'id': user.id,
+                    'name': user.name,
+                    'last_name': user.last_name,
+                    'search_count': search_count
+                })
+
+            return JsonResponse(response_data,  safe=False, status=200)
+    
+        else:
+            return JsonResponse({'error': 'Invalid query parameter'}, status=400)
 
 
 @permission_classes((IsAuthenticated, IsAdmin, ))

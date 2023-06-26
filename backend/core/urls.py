@@ -30,5 +30,6 @@ urlpatterns = [
     path('admins/', AdminListView.as_view(), name='list-admins'),
     path('admin/update/<int:id>/', update_admin, name='update-user'),
     path('admin/disable/<int:id>/', disable_admin, name='delete-user'),
+    path('reports/', ReportListView.as_view(), name='list-reports'),
     path('crud/', include(router.urls)),
 ]
