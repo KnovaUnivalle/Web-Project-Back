@@ -26,6 +26,7 @@ python-dotenv = "^1.0.0"
 autopep8 = "^2.0.2"
 flake8 = "^6.0.0"
 django-environ = "^0.10.0"
+faker = "^18.11.2"
 
 [build-system]
 requires = ["poetry-core"]

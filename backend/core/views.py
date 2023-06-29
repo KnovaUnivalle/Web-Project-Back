@@ -14,7 +14,6 @@ from rest_framework.views import APIView
 @permission_classes((IsAuthenticated, IsAdmin ))
 class UserRegisterView(generics.CreateAPIView):
     def post(self, request):
-        request.data['rol'] = 1 or request.data
         serializer = UserSerializerReduce(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
