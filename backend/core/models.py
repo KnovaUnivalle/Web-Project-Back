@@ -60,6 +60,7 @@ class Product(models.Model):
 
 class Store(models.Model):
     id = models.BigAutoField(primary_key=True)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
     address = models.CharField(max_length=50)
 
