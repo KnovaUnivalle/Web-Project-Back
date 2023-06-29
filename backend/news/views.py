@@ -14,6 +14,13 @@ class NewsListView(generics.ListAPIView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        query_param = self.request.query_params.get('last')
+        
+        if query_param:
+            return News.objects.order_by('-id')[:10]
+        return queryset
+
+    def filter_queryset(self, queryset):
         query_param = self.request.query_params.get('title')
 
         if query_param:

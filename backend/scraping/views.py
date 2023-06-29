@@ -235,7 +235,7 @@ def laCesteria(product):
                              'url': productUrl(i), 'store': 'La Cestería'}
                             for i in products[:24]]
 
-            return productNames
+            return sorted(productNames, key=lambda x: int(x["price"]) if isinstance(x["price"], int) else int(x["price"]))
 
         except (AttributeError, TypeError):
             return []
