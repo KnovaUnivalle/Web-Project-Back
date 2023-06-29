@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
-from django.db.models import Count, Min
+from django.db.models import Count, Min,Avg
 from django.views import View
 from .serializers import *
 from .permission import *
@@ -163,6 +163,19 @@ class ReportListView(View):
                 })
 
             return JsonResponse(response_data,  safe=False, status=200)
+        
+        elif query_param == 'lower_products':
+            top_products = Product.objects.order_by('price')[:5]
+
+            response_data = []
+            for product in top_products:
+                response_data.append({
+                    'id': product.id,
+                    'name': product.name,
+                    'price': product.price,
+                })
+
+            return JsonResponse(response_data, safe=False, status=200)
     
         else:
             return JsonResponse({'error': 'Invalid query parameter'}, status=400)
