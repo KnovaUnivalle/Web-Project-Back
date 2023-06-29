@@ -1,11 +1,10 @@
 from pathlib import Path
 from datetime import timedelta
 from django.utils.translation import gettext_lazy as _
-import environ
+from dotenv import load_dotenv
+import os
 
-# Initialise environment variables
-env = environ.Env()
-environ.Env.read_env()
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -15,18 +14,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRETE_KEY')
+SECRET_KEY = os.environ.get('SECRETE_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG') or False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', os.environ.get('DJANGO_ALLOWED_HOSTS')]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://127.0.0.1:3030",  # Frontend origin
-    "http://localhost:3030",  # Frontend origin
-    "http://localhost:8080",
-    "http://127.0.0.1:8080"
+    os.environ.get('FRONTEND_ORIGIN_1'),
+    os.environ.get('FRONTEND_ORIGIN_2'),
+    os.environ.get('FRONTEND_ORIGIN_3'),
+    os.environ.get('FRONTEND_ORIGIN_4'),
 ]
 
 REST_FRAMEWORK = {
@@ -116,11 +115,11 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': env('db'),
-        'USER': env('user'),
-        'PASSWORD': env('password'),
-        'HOST': env('host'),
-        'PORT': env('port'),
+        'NAME': os.environ.get('db'),
+        'USER': os.environ.get('user'),
+        'PASSWORD': os.environ.get('password'),
+        'HOST': os.environ.get('host'),
+        'PORT': os.environ.get('port'),
     }
 }
 
@@ -178,6 +177,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 SITE_ID = 1
 LOGIN_REDIRECT_URL = '/'
@@ -187,5 +187,5 @@ LOGIN_REDIRECT_URL = '/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-GOOGLE_CLIENT_ID = env('GOOGLE_CLIENT_ID')
-SOCIAL_SECRET_KEY = env('SOCIAL_SECRET_KEY')
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
+SOCIAL_SECRET_KEY = os.environ.get('SOCIAL_SECRET_KEY')
