@@ -28,6 +28,12 @@ class NewsListView(generics.ListAPIView):
         return queryset
     
 
+    
+class NewsListViewCustomer(APIView):
+    def get(self, request):
+        news = News.objects.filter(is_active=True).order_by('-id')[:10]
+        serializer = NewsSerializer(news, many=True)
+        return Response(serializer.data)    
 
 class NewsCreateView(APIView):
     def post(self, request):

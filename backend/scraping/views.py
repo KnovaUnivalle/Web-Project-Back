@@ -218,7 +218,7 @@ def laCesteria(product):
                 priceWithPoint = tag.find('div', class_='product-item__price-list price-list').find(
                     'span', class_='price').get_text().split('$')[1]
 
-                price = priceWithPoint.replace('.', '')
+                price = int(priceWithPoint.replace('.', ''))
 
                 return price
 
@@ -235,7 +235,9 @@ def laCesteria(product):
                              'url': productUrl(i), 'store': 'La Cestería'}
                             for i in products[:24]]
 
-            return sorted(productNames, key=lambda x: int(x["price"]) if isinstance(x["price"], int) else int(x["price"]))
+            sorted_products = sorted(productNames, key=lambda x: int(x["price"]) if isinstance(x["price"], int) else int(x["price"]))
+
+            return sorted_products
 
         except (AttributeError, TypeError):
             return []
