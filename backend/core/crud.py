@@ -1,10 +1,15 @@
-from rest_framework import status, viewsets, permissions, generics, filters
+from rest_framework import status, generics, filters
+from django.http import JsonResponse
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
+from django.db.models import Count
+from django.views import View
 from .serializers import *
 from .permission import *
 from .models import *
+import datetime
 from django.db.models import Q
 
 from rest_framework.response import Response
@@ -57,6 +62,7 @@ class UserListView(generics.ListAPIView):
     
 
 @api_view(['GET'])
+@permission_classes((IsAuthenticated, IsAdmin, ))
 def user_id(request, id):
     try:
         user = User.objects.get(id=id)
@@ -122,35 +128,100 @@ def disable_user(request, id):
         return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 
-@permission_classes((IsAuthenticated, IsAdmin, ))
-class RoleViewSet(viewsets.ModelViewSet):
-    queryset = Rol.objects.all()
-    serializer_class = RolSerializer
+@permission_classes((IsAuthenticated, IsAdminOrManager, ))
+class ReportListView(View):
+    def get(self, request):
+        query_param = request.GET.get('q')
 
+        if query_param == 'top_products':
+            top_products = SearchHistory.objects.values('product_id').annotate(total_searches=Count('product_id')).order_by('-total_searches')[:5]
+            product_ids = [item['product_id'] for item in top_products]
+            top_products_list = Product.objects.filter(id__in=product_ids)
 
-@permission_classes((IsAuthenticated, IsAdmin, ))
-class ProductViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.AllowAny]
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
+            response_data = []
+            for product in top_products_list:
+                search_count = SearchHistory.objects.filter(product=product).count()
+                response_data.append({
+                    'id': product.id,
+                    'name': product.name,
+                    'price': product.price,
+                    'search_count': search_count
+                })
 
+            return JsonResponse(response_data, safe=False ,status=200)
+        
+        if query_param == 'top_store':
+            top_store = SearchHistory.objects.values('store').annotate(total_searches=Count('store')).order_by('-total_searches')[:5]
+            store_ids = [item['store'] for item in top_store]
+            top_stores_list = Store.objects.filter(id__in=store_ids)
 
-@permission_classes((IsAuthenticated, IsAdmin, ))
-class StoreViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.AllowAny]
-    queryset = Store.objects.all()
-    serializer_class = StoreSerializer
+            response_data = []
+            for store in top_stores_list:
+                search_count = SearchHistory.objects.filter(store=store).count()
+                response_data.append({
+                    'id': store.id,
+                    'name': store.name,
+                    'price': store.address,
+                    'search_count': search_count
+                })
 
+            return JsonResponse(response_data, safe=False ,status=200)
 
-@permission_classes((IsAuthenticated, IsAdmin, ))
-class SearchHistoryViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.AllowAny]
-    queryset = SearchHistory.objects.all()
-    serializer_class = SearchHistorySerializer
+        elif query_param == 'top_users':
+            top_users = SearchHistory.objects.values('user_id').annotate(total_searches=Count('user')).order_by('-total_searches')[:5]
+            user_ids = [item['user_id'] for item in top_users]
+            top_users_list = User.objects.filter(id__in=user_ids)
 
+            response_data = []
+            for user in top_users_list:
+                search_count = SearchHistory.objects.filter(user=user).count()
+                response_data.append({
+                    'id': user.id,
+                    'name': user.name,
+                    'last_name': user.last_name,
+                    'search_count': search_count
+                })
 
-@permission_classes((IsAuthenticated, IsAdmin, ))
-class SuggestionViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.AllowAny]
-    queryset = Suggestion.objects.all()
-    serializer_class = SuggestionSerializer
+            return JsonResponse(response_data,  safe=False, status=200)
+        
+        elif query_param == 'lower_products':
+            top_products = Product.objects.order_by('price')[:5]
+
+            response_data = []
+            for product in top_products:
+                response_data.append({
+                    'id': product.id,
+                    'name': product.name,
+                    'price': product.price,
+                })
+
+            return JsonResponse(response_data, safe=False, status=200)
+    
+        else:
+            return JsonResponse({'error': 'Invalid query parameter'}, status=400)
+        
+
+class RegisterSearch(APIView):
+    def post(self, request):
+        data = request.data
+        token = request.headers.get('Authorization').split(' ')[1]
+        decode = decode_token(token)
+        
+        product = Product.objects.create(name=data.get('name'), price=data.get('price'), description=data.get('name'))
+
+        store = Store.objects.get(name=data.get('store'))
+        user = User.objects.get(id=decode['rol_id'])
+
+        new_data = {
+            'date': datetime.date.today(),
+            'product': product.id,
+            'store': store.id,
+            'user': user.id
+        }
+
+        serializer = SearchHistorySerializer(data=new_data)
+        if serializer.is_valid():
+            search = serializer.save()
+            search.save()
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

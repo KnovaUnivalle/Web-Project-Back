@@ -5,7 +5,6 @@ description = ""
 authors = ["Knova <https://github.com/KnovaUnivalle>"]
 license = "MIT license"
 readme = "README.md"
-packages = [{include = "web_project_back"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -20,12 +19,14 @@ google-api-python-client = "^2.88.0"
 gunicorn = "^20.1.0"
 django-filter = "^23.2"
 bs4 = "^0.0.1"
+python-dotenv = "^1.0.0"
 
 
 [tool.poetry.group.dev.dependencies]
 autopep8 = "^2.0.2"
 flake8 = "^6.0.0"
 django-environ = "^0.10.0"
+faker = "^18.11.2"
 
 [build-system]
 requires = ["poetry-core"]

@@ -11,10 +11,9 @@ from .permission import IsCustomer, IsManager, IsAdmin
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 
-@permission_classes((AllowAny, ))
+@permission_classes((IsAuthenticated, IsAdmin ))
 class UserRegisterView(generics.CreateAPIView):
     def post(self, request):
-        request.data['rol'] = 1 or request.data
         serializer = UserRegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
@@ -22,7 +21,20 @@ class UserRegisterView(generics.CreateAPIView):
             user.save()
             return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
+    
+
+@permission_classes((AllowAny, ))
+class CustomerRegisterView(APIView):
+    def post(self, request):
+        request.data['rol'] = 1
+        serializer = UserRegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            user.password = encrypt_password(user.password)
+            user.save()
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(["POST"])
 @permission_classes((AllowAny, ))
@@ -43,6 +55,7 @@ def login(request):
     password = request.data.get('password')
     try:
         user = User.objects.get(email=email)
+        print(user.password)
         rol_id = user.rol_id
     except User.DoesNotExist:
         try:
@@ -50,7 +63,7 @@ def login(request):
             rol_id = 0
         except Admin.DoesNotExist:
             return JsonResponse({'error': 'Invalid credentials.'}, status=status.HTTP_401_UNAUTHORIZED)
-
+    
     if verify_password(password, user.password):
         data = generateToken(user, rol_id)
     

@@ -14,7 +14,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = UserModel
-		fields = ('id', 'rol', 'name', 'last_name', 'email', 'birth_date', 'is_active')
+		fields = ('id', 'rol', 'name', 'last_name', 'email', 'birth_date', 'is_active', 'password')
 
 class UserLoginSerializer(serializers.Serializer):
 	email = serializers.EmailField()

@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from django.http import JsonResponse
 import json
-
+import random
 
 @api_view(["GET"])
 def searchProduct(request):
@@ -25,6 +25,9 @@ def searchProduct(request):
             return JsonResponse({'error': 'Request error'}, status=status.HTTP_404_NOT_FOUND)
 
         else:
+            random_products = random.sample(products, 10)
+            request.session['suggested_products'] = random_products
+            
             paginator = CustomPagination()
             paginated_products = paginator.paginate_queryset(products, request)
             return paginator.get_paginated_response(paginated_products)
@@ -36,7 +39,7 @@ def searchProduct(request):
 
 
 def mercadoLibre(product):
-    url = f'https://listado.mercadolibre.com.co/{product}'
+    url = f'https://listado.mercadolibre.com.co/{product}_OrderId_PRICE_NoIndex_True'
     response = requests.get(url)
 
     if response.status_code == 200:
@@ -111,8 +114,10 @@ def loPido(product):
                              'image': product['item']['image'], 'url': product['item']['@id'],
                              'store': 'Lopido.com'}
                             for product in dictData['itemListElement'][:16]]
+            
+            sorted_products = sorted(productNames, key=lambda x: int(x["price"]) if isinstance(x["price"], int) else int(x["price"]))
 
-            return productNames
+            return sorted_products
 
         except (AttributeError, TypeError):
             return []
@@ -218,7 +223,7 @@ def laCesteria(product):
                 priceWithPoint = tag.find('div', class_='product-item__price-list price-list').find(
                     'span', class_='price').get_text().split('$')[1]
 
-                price = priceWithPoint.replace('.', '')
+                price = int(priceWithPoint.replace('.', ''))
 
                 return price
 
@@ -235,10 +240,17 @@ def laCesteria(product):
                              'url': productUrl(i), 'store': 'La Cestería'}
                             for i in products[:24]]
 
-            return productNames
+            sorted_products = sorted(productNames, key=lambda x: int(x["price"]) if isinstance(x["price"], int) else int(x["price"]))
+
+            return sorted_products
 
         except (AttributeError, TypeError):
             return []
 
     else:
         return []
+
+@api_view(["GET"])
+def getRandomProducts(request):
+    suggested_products = request.session.get('suggested_products', [])
+    return JsonResponse({'suggested_products': suggested_products}, status=status.HTTP_200_OK)

@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Faker
+generate_data.py
+
 # C extensions
 *.so
 
