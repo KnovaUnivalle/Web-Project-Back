@@ -25,7 +25,7 @@ CORS_ALLOWED_ORIGINS = [
     os.environ.get('FRONTEND_ORIGIN_1'),
     os.environ.get('FRONTEND_ORIGIN_2'),
     os.environ.get('FRONTEND_ORIGIN_3'),
-    os.environ.get('FRONTEND_ORIGIN_4'),
+    os.environ.get('FRONTEND_ORIGIN_4')
 ]
 
 REST_FRAMEWORK = {
