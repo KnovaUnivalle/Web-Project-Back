@@ -62,7 +62,7 @@ def mercadoLibre(product):
             # Gets the product price
             def productPrice(tag):
                 return tag.find('div', class_='ui-search-price__second-line shops__price-second-line').find(
-                    'span', class_='price-tag-text-sr-only').get_text().split()[0]
+                    'span').find('span').get_text().split()[0]
 
             # Gets the product image
             def productImage(tag):
