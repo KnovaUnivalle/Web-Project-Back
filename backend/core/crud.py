@@ -62,7 +62,7 @@ class UserListView(generics.ListAPIView):
     
 
 @api_view(['GET'])
-@permission_classes((IsAuthenticated, IsAdmin, ))
+@permission_classes((IsAuthenticated, IsAdminOrManager, ))
 def user_id(request, id):
     try:
         user = User.objects.get(id=id)
