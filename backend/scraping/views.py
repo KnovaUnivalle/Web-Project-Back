@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from django.http import JsonResponse
 import json
-
+import random
 
 @api_view(["GET"])
 def searchProduct(request):
@@ -25,6 +25,9 @@ def searchProduct(request):
             return JsonResponse({'error': 'Request error'}, status=status.HTTP_404_NOT_FOUND)
 
         else:
+            random_products = random.sample(products, 10)
+            request.session['suggested_products'] = random_products
+            
             paginator = CustomPagination()
             paginated_products = paginator.paginate_queryset(products, request)
             return paginator.get_paginated_response(paginated_products)
@@ -244,3 +247,8 @@ def laCesteria(product):
 
     else:
         return []
+
+@api_view(["GET"])
+def getRandomProducts(request):
+    suggested_products = request.session.get('suggested_products', [])
+    return JsonResponse({'suggested_products': suggested_products}, status=status.HTTP_200_OK)

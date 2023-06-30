@@ -1,13 +1,15 @@
 from rest_framework import status, viewsets, permissions, generics, filters
 from django.http import JsonResponse
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
-from django.db.models import Count, Min,Avg
+from django.db.models import Count
 from django.views import View
 from .serializers import *
 from .permission import *
 from .models import *
+import datetime
 from django.db.models import Q
 
 from rest_framework.response import Response
@@ -146,6 +148,23 @@ class ReportListView(View):
                 })
 
             return JsonResponse(response_data, safe=False ,status=200)
+        
+        if query_param == 'top_store':
+            top_store = SearchHistory.objects.values('store').annotate(total_searches=Count('store')).order_by('-total_searches')[:5]
+            store_ids = [item['store'] for item in top_store]
+            top_stores_list = Store.objects.filter(id__in=store_ids)
+
+            response_data = []
+            for store in top_stores_list:
+                search_count = SearchHistory.objects.filter(store=store).count()
+                response_data.append({
+                    'id': store.id,
+                    'name': store.name,
+                    'price': store.address,
+                    'search_count': search_count
+                })
+
+            return JsonResponse(response_data, safe=False ,status=200)
 
         elif query_param == 'top_users':
             top_users = SearchHistory.objects.values('user_id').annotate(total_searches=Count('user')).order_by('-total_searches')[:5]
@@ -179,6 +198,34 @@ class ReportListView(View):
     
         else:
             return JsonResponse({'error': 'Invalid query parameter'}, status=400)
+        
+
+class RegisterSearch(APIView):
+    def post(self, request):
+        data = request.data
+        name = data.get('name')
+        price = data.get('price')
+        description = data.get('description')
+
+        product = Product.objects.create(name=name, price=price, description=description)
+
+        product_id = product.id
+
+        store_name = data.get('store')
+        store = Store.objects.get(name=store_name)
+
+        serializer = SearchHistorySerializer(data={
+            'date': datetime.datetime.now(),
+            'product_id': product_id,
+            'store_id': store.id,
+            'user_id': data.get('user_id')
+        })
+        if serializer.is_valid():
+            search = serializer.save()
+            search.save()
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 @permission_classes((IsAuthenticated, IsAdmin, ))
