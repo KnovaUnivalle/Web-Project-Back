@@ -39,7 +39,7 @@ def searchProduct(request):
 
 
 def mercadoLibre(product):
-    url = f'https://listado.mercadolibre.com.co/{product}'
+    url = f'https://listado.mercadolibre.com.co/{product}_OrderId_PRICE_NoIndex_True'
     response = requests.get(url)
 
     if response.status_code == 200:
@@ -114,8 +114,10 @@ def loPido(product):
                              'image': product['item']['image'], 'url': product['item']['@id'],
                              'store': 'Lopido.com'}
                             for product in dictData['itemListElement'][:16]]
+            
+            sorted_products = sorted(productNames, key=lambda x: int(x["price"]) if isinstance(x["price"], int) else int(x["price"]))
 
-            return productNames
+            return sorted_products
 
         except (AttributeError, TypeError):
             return []

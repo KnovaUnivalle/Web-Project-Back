@@ -127,7 +127,6 @@ def disable_user(request, id):
         return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 
-
 class ReportListView(View):
     def get(self, request):
         query_param = request.GET.get('q')
@@ -203,23 +202,22 @@ class ReportListView(View):
 class RegisterSearch(APIView):
     def post(self, request):
         data = request.data
-        name = data.get('name')
-        price = data.get('price')
-        description = data.get('description')
+        token = request.headers.get('Authorization').split(' ')[1]
+        decode = decode_token(token)
+        
+        product = Product.objects.create(name=data.get('name'), price=data.get('price'), description=data.get('name'))
 
-        product = Product.objects.create(name=name, price=price, description=description)
+        store = Store.objects.get(name=data.get('store'))
+        user = User.objects.get(id=decode['rol_id'])
 
-        product_id = product.id
+        new_data = {
+            'date': datetime.date.today(),
+            'product': product.id,
+            'store': store.id,
+            'user': user.id
+        }
 
-        store_name = data.get('store')
-        store = Store.objects.get(name=store_name)
-
-        serializer = SearchHistorySerializer(data={
-            'date': datetime.datetime.now(),
-            'product_id': product_id,
-            'store_id': store.id,
-            'user_id': data.get('user_id')
-        })
+        serializer = SearchHistorySerializer(data=new_data)
         if serializer.is_valid():
             search = serializer.save()
             search.save()

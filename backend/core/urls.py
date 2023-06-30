@@ -16,6 +16,7 @@ urlpatterns = [
     path('admin/register/', registerAdmin, name='registerAdmin'),
     path('user/register/', UserRegisterView.as_view(), name='registerUser'),
     path('customer/register/', CustomerRegisterView.as_view(), name='registerCustomer'),
+    path('customer/search/', RegisterSearch.as_view(), name='addSearch'),
     path('login/', login, name='login'),
     path('logout/', logout, name='logout'),
     path('customer/', CustomerView.as_view(), name='customer'),

@@ -30,7 +30,7 @@ class CustomerRegisterView(APIView):
         serializer = UserSerializerReduce(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            user.password = encrypt_password(user.password)
+            # user.password = encrypt_password(user.password)
             user.save()
             return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -62,7 +62,7 @@ def login(request):
             rol_id = 0
         except Admin.DoesNotExist:
             return JsonResponse({'error': 'Invalid credentials.'}, status=status.HTTP_401_UNAUTHORIZED)
-
+    
     if verify_password(password, user.password):
         data = generateToken(user, rol_id)
     
