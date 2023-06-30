@@ -6,12 +6,6 @@ from .crud import *
 
 router = routers.DefaultRouter()
 
-router.register(r'rol', RoleViewSet)
-router.register(r'product', ProductViewSet)
-router.register(r'store', StoreViewSet)
-router.register(r'search_history', SearchHistoryViewSet)
-router.register(r'suggestion', SuggestionViewSet)
-
 urlpatterns = [
     path('admin/register/', registerAdmin, name='registerAdmin'),
     path('user/register/', UserRegisterView.as_view(), name='registerUser'),
@@ -32,6 +26,5 @@ urlpatterns = [
     path('admins/', AdminListView.as_view(), name='list-admins'),
     path('admin/update/<int:id>/', update_admin, name='update-user'),
     path('admin/disable/<int:id>/', disable_admin, name='delete-user'),
-    path('reports/', ReportListView.as_view(), name='list-reports'),
-    path('crud/', include(router.urls)),
+    path('reports/', ReportListView.as_view(), name='list-reports')
 ]

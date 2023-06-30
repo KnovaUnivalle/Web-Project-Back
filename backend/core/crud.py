@@ -1,4 +1,4 @@
-from rest_framework import status, viewsets, permissions, generics, filters
+from rest_framework import status, generics, filters
 from django.http import JsonResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.views import APIView
@@ -62,6 +62,7 @@ class UserListView(generics.ListAPIView):
     
 
 @api_view(['GET'])
+@permission_classes((IsAuthenticated, IsAdmin, ))
 def user_id(request, id):
     try:
         user = User.objects.get(id=id)
@@ -223,38 +224,3 @@ class RegisterSearch(APIView):
             search.save()
             return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-@permission_classes((IsAuthenticated, IsAdmin, ))
-class RoleViewSet(viewsets.ModelViewSet):
-    queryset = Rol.objects.all()
-    serializer_class = RolSerializer
-
-
-@permission_classes((IsAuthenticated, IsAdmin, ))
-class ProductViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.AllowAny]
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-
-
-@permission_classes((IsAuthenticated, IsAdmin, ))
-class StoreViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.AllowAny]
-    queryset = Store.objects.all()
-    serializer_class = StoreSerializer
-
-
-@permission_classes((IsAuthenticated, IsAdmin, ))
-class SearchHistoryViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.AllowAny]
-    queryset = SearchHistory.objects.all()
-    serializer_class = SearchHistorySerializer
-
-
-@permission_classes((IsAuthenticated, IsAdmin, ))
-class SuggestionViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.AllowAny]
-    queryset = Suggestion.objects.all()
-    serializer_class = SuggestionSerializer
