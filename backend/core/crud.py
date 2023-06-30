@@ -128,6 +128,7 @@ def disable_user(request, id):
         return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 
+@permission_classes((IsAuthenticated, IsAdminOrManager, ))
 class ReportListView(View):
     def get(self, request):
         query_param = request.GET.get('q')
