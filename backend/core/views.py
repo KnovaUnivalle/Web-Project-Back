@@ -14,7 +14,7 @@ from rest_framework.views import APIView
 @permission_classes((IsAuthenticated, IsAdmin ))
 class UserRegisterView(generics.CreateAPIView):
     def post(self, request):
-        serializer = UserSerializerReduce(data=request.data)
+        serializer = UserRegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
             user.password = encrypt_password(user.password)
@@ -27,10 +27,10 @@ class UserRegisterView(generics.CreateAPIView):
 class CustomerRegisterView(APIView):
     def post(self, request):
         request.data['rol'] = 1
-        serializer = UserSerializerReduce(data=request.data)
+        serializer = UserRegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            # user.password = encrypt_password(user.password)
+            user.password = encrypt_password(user.password)
             user.save()
             return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -55,6 +55,7 @@ def login(request):
     password = request.data.get('password')
     try:
         user = User.objects.get(email=email)
+        print(user.password)
         rol_id = user.rol_id
     except User.DoesNotExist:
         try:
